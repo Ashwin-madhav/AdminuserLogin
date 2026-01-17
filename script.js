@@ -41,7 +41,6 @@ function loadData() {
     usersData = storedUsers ? JSON.parse(storedUsers) : [];
 }
 
-// --- REMEMBER ME LOGIC ---
 function checkRememberMe() {
     const savedEmail = localStorage.getItem(STORAGE_KEY_REMEMBER);
     if (savedEmail) {
@@ -64,11 +63,14 @@ registerForm.addEventListener('submit', (e) => {
     const password = document.getElementById('reg-password').value;
     const termsCheck = document.getElementById('reg-terms-check');
 
-    // Validation
     if (!termsCheck.checked) {
         showToast("You must accept the terms and conditions.", "error");
         return;
     }
+    
+    // Refresh User Data to be safe
+    usersData = JSON.parse(localStorage.getItem(STORAGE_KEY_USERS) || "[]");
+
     if(email === ADMIN_EMAIL) {
         showToast("Cannot register as Admin.", "error");
         return;
@@ -78,19 +80,18 @@ registerForm.addEventListener('submit', (e) => {
         return;
     }
 
-    // Save New User (Pending Status)
     const newUser = { 
         name, 
         email, 
         password, 
         role: 'user', 
-        approved: false, 
+        approved: false, // Default is Pending
         regDate: new Date().toLocaleDateString() 
     }; 
     usersData.push(newUser);
     localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(usersData));
     
-    showToast("Registration successful! Please wait for Admin approval.", "success");
+    showToast("Registration successful! Waiting for Admin approval.", "success");
     registerForm.reset();
     container.classList.remove('active'); // Flip back to login
 });
@@ -98,47 +99,51 @@ registerForm.addEventListener('submit', (e) => {
 // 3. LOGIN LOGIC
 loginForm.addEventListener('submit', (e) => {
     e.preventDefault();
+    
+    // CRITICAL FIX: Refresh data from LocalStorage on every login attempt.
+    // This ensures if Admin just approved you in another tab, you can login now.
+    usersData = JSON.parse(localStorage.getItem(STORAGE_KEY_USERS) || "[]");
+    projectData = JSON.parse(localStorage.getItem(STORAGE_KEY_DATA) || "[]");
+
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value.trim();
     const rememberMe = document.getElementById('remember-me-check').checked;
 
-    // A. Handle Remember Me
     if (rememberMe) {
         localStorage.setItem(STORAGE_KEY_REMEMBER, email);
     } else {
         localStorage.removeItem(STORAGE_KEY_REMEMBER);
     }
 
-    // B. Check Admin
+    // A. Check Admin
     if(email === ADMIN_EMAIL) {
-        // Admin password check (Simulated)
+        // Hardcoded admin for this demo
         currentUser = { email: email, role: 'admin', name: "Administrator" };
         enterDashboard();
         return;
     }
 
-    // C. Check Standard Users
+    // B. Check Standard Users
     const user = usersData.find(u => u.email === email && u.password === password);
 
     if(user) {
         if(!user.approved) {
-            showToast("Your account is still pending Admin approval.", "error");
+            showToast("Account pending. Please wait for Admin approval.", "error");
             return;
         }
         currentUser = user;
         enterDashboard();
     } else {
-        showToast("Invalid credentials", "error");
+        showToast("Invalid credentials or user not found.", "error");
     }
 });
 
-// 4. GUEST LOGIN
+// 4. GUEST & LOGOUT
 guestBtn.addEventListener('click', () => {
     currentUser = { role: 'guest', name: 'Guest' };
     enterDashboard();
 });
 
-// 5. LOGOUT
 document.getElementById('logout-btn').addEventListener('click', () => {
     currentUser = null;
     dashboardApp.classList.add('hidden');
@@ -156,35 +161,47 @@ function enterDashboard() {
     
     document.getElementById('user-display-name').textContent = currentUser.name + ` (${currentUser.role})`;
 
-    // Reset View State
+    // Hide everything first
     document.getElementById('guest-view').classList.add('hidden');
     document.getElementById('schedule-view').classList.add('hidden');
     document.getElementById('users-view').classList.add('hidden');
     document.getElementById('admin-tabs').classList.add('hidden');
-    document.getElementById('admin-toolbar').style.display = 'none'; // Default hidden
+    
+    // UI Elements
+    const adminToolbar = document.getElementById('admin-toolbar');
+    const userTitle = document.getElementById('user-schedule-title');
+    const actionsCol = document.querySelectorAll('.actions-col');
 
-    // Route Views based on Role
+    // Route logic
     if (currentUser.role === 'guest') {
         document.getElementById('guest-view').classList.remove('hidden');
     } 
     else if (currentUser.role === 'user') {
+        // USER VIEW: Schedule visible, but NO admin controls
         document.getElementById('schedule-view').classList.remove('hidden');
-        document.querySelectorAll('.action-btn').forEach(btn => btn.style.display = 'none');
-        document.querySelectorAll('.actions-col').forEach(col => col.style.display = 'none');
+        adminToolbar.style.display = 'none';   // Hide Add/Save buttons
+        userTitle.classList.remove('hidden'); // Show "Read Only" title
+        
+        // Hide Action Column (Delete button header)
+        actionsCol.forEach(el => el.style.display = 'none');
+        
         renderProjectTable();
     } 
     else if (currentUser.role === 'admin') {
+        // ADMIN VIEW: Full access
         document.getElementById('schedule-view').classList.remove('hidden');
         document.getElementById('admin-tabs').classList.remove('hidden');
-        document.getElementById('admin-toolbar').style.display = 'flex';
-        document.querySelectorAll('.action-btn').forEach(btn => btn.style.display = 'inline-block');
+        adminToolbar.style.display = 'flex';
+        userTitle.classList.add('hidden');
+        
+        actionsCol.forEach(el => el.style.display = 'table-cell');
         
         updatePendingCount();
         renderProjectTable();
     }
 }
 
-// --- ADMIN TAB SWITCHING ---
+// --- ADMIN TABS ---
 window.switchAdminTab = function(tabName) {
     const scheduleView = document.getElementById('schedule-view');
     const usersView = document.getElementById('users-view');
@@ -205,29 +222,32 @@ window.switchAdminTab = function(tabName) {
     }
 };
 
-// --- TABLE 1: PROJECT SCHEDULE LOGIC ---
+// --- TABLE 1: PROJECT SCHEDULE ---
 
 function renderProjectTable() {
     const tbody = document.getElementById('table-body');
     tbody.innerHTML = "";
     
-    const isAdmin = currentUser.role === 'admin';
-    const actionsHeader = document.querySelector('.actions-col');
-    if(actionsHeader) actionsHeader.style.display = isAdmin ? 'table-cell' : 'none';
+    const isAdmin = (currentUser && currentUser.role === 'admin');
 
     projectData.forEach((row, index) => {
         const tr = document.createElement('tr');
         
+        // Helper to create cells
         const createCell = (key, type='text') => {
             const td = document.createElement('td');
+            
             if(isAdmin) {
+                // ADMIN: See INPUT fields to edit
                 const input = document.createElement('input');
                 input.type = type;
                 input.value = row[key] || '';
                 input.onchange = (e) => { projectData[index][key] = e.target.value; };
                 td.appendChild(input);
             } else {
+                // USER: See plain TEXT (Read Only)
                 td.textContent = row[key] || '';
+                td.style.padding = "20px 15px"; // Slightly better spacing for text
             }
             return td;
         };
@@ -241,6 +261,7 @@ function renderProjectTable() {
         tr.appendChild(createCell('crew'));
         tr.appendChild(createCell('remarks'));
 
+        // Delete Button (Only for Admin)
         if(isAdmin) {
             const tdAction = document.createElement('td');
             const btn = document.createElement('button');
@@ -250,12 +271,13 @@ function renderProjectTable() {
             tdAction.appendChild(btn);
             tr.appendChild(tdAction);
         }
+        
         tbody.appendChild(tr);
     });
     feather.replace();
 }
 
-// Project Actions
+// Project Actions (Admin Only)
 document.getElementById('add-row-btn').addEventListener('click', () => {
     projectData.push({ id: Date.now(), date: "", name: "", client: "", setup: "", show: "", loc: "", crew: "", remarks: "" });
     renderProjectTable();
@@ -273,40 +295,29 @@ function deleteProject(index) {
     }
 }
 
-// --- TABLE 2: USER MANAGEMENT LOGIC (ADMIN) ---
+// --- TABLE 2: USER APPROVALS ---
 
 function renderUserTable() {
+    // Re-fetch to ensure we have latest
+    usersData = JSON.parse(localStorage.getItem(STORAGE_KEY_USERS) || "[]");
     const tbody = document.getElementById('users-table-body');
     tbody.innerHTML = "";
 
     usersData.forEach((user, index) => {
         const tr = document.createElement('tr');
         
-        // Name
-        const tdName = document.createElement('td');
-        tdName.textContent = user.name;
-        tr.appendChild(tdName);
-
-        // Email
-        const tdEmail = document.createElement('td');
-        tdEmail.textContent = user.email;
-        tr.appendChild(tdEmail);
-
-        // Date
-        const tdDate = document.createElement('td');
-        tdDate.textContent = user.regDate || "-";
-        tr.appendChild(tdDate);
-
-        // Status
+        const tdName = document.createElement('td'); tdName.textContent = user.name;
+        const tdEmail = document.createElement('td'); tdEmail.textContent = user.email;
+        const tdDate = document.createElement('td'); tdDate.textContent = user.regDate || "-";
+        
         const tdStatus = document.createElement('td');
         const spanStatus = document.createElement('span');
         spanStatus.className = user.approved ? 'status-approved' : 'status-pending';
         spanStatus.textContent = user.approved ? 'Active' : 'Pending';
         tdStatus.appendChild(spanStatus);
-        tr.appendChild(tdStatus);
 
-        // Actions
         const tdAction = document.createElement('td');
+        
         if(!user.approved) {
             const btnApprove = document.createElement('button');
             btnApprove.className = 'btn-approve';
@@ -321,31 +332,34 @@ function renderUserTable() {
             tdAction.appendChild(btnApprove);
             tdAction.appendChild(btnReject);
         } else {
-            tdAction.textContent = "-";
+            tdAction.innerHTML = '<span style="color:#aaa;">No action</span>';
         }
+
+        tr.appendChild(tdName);
+        tr.appendChild(tdEmail);
+        tr.appendChild(tdDate);
+        tr.appendChild(tdStatus);
         tr.appendChild(tdAction);
-        
         tbody.appendChild(tr);
     });
 }
 
 function updatePendingCount() {
+    usersData = JSON.parse(localStorage.getItem(STORAGE_KEY_USERS) || "[]");
     const count = usersData.filter(u => !u.approved).length;
     document.getElementById('pending-count').textContent = count;
 }
 
 function approveUser(index) {
-    const user = usersData[index];
-    user.approved = true;
+    usersData[index].approved = true;
     localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(usersData));
     
-    // UI Feedback
-    showToast(`User ${user.name} approved.`, "success");
+    showToast(`User ${usersData[index].name} approved.`, "success");
     
-    // EMAIL SIMULATION (Client-Side)
-    // We open a mailto link to let the Admin send the email manually
-    const subject = encodeURIComponent("Project System Account Approved");
-    const body = encodeURIComponent(`Hello ${user.name},\n\nYour account for the Project Management System has been approved by the Admin.\n\nYou can now log in here: ${window.location.href}\n\nRegards,\nAdmin`);
+    // Open Mail Client
+    const user = usersData[index];
+    const subject = encodeURIComponent("Account Approved");
+    const body = encodeURIComponent(`Hi ${user.name},\n\nYour account has been approved.\nLogin here: ${window.location.href}`);
     window.open(`mailto:${user.email}?subject=${subject}&body=${body}`);
     
     renderUserTable();
@@ -353,16 +367,16 @@ function approveUser(index) {
 }
 
 function rejectUser(index) {
-    if(confirm(`Are you sure you want to reject and remove ${usersData[index].name}?`)) {
+    if(confirm(`Reject ${usersData[index].name}?`)) {
         usersData.splice(index, 1);
         localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(usersData));
-        showToast("User request rejected/removed.", "info");
+        showToast("User rejected.", "info");
         renderUserTable();
         updatePendingCount();
     }
 }
 
-// --- UTILITY: TOAST ---
+// --- TOAST NOTIFICATION ---
 function showToast(message, type) {
     const toast = document.createElement('div');
     toast.className = 'toast';
