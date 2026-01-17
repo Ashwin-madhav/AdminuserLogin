@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Management System</title>
+    <link rel="stylesheet" href="https://public.codepenassets.com/css/normalize-5.0.0.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body>
+
+    <!-- NOTIFICATION AREA -->
+    <div id="notification-area"></div>
+
+    <!-- AUTH CONTAINER -->
+    <div id="container">
+        <!-- Login Side -->
+        <div class="login">
+            <div class="content">
+                <h1>Log In</h1>
+                <form id="login-form">
+                    <input type="email" id="login-email" placeholder="Email" required>
+                    <input type="password" id="login-password" placeholder="Password" required>
+                    
+                    <!-- UPDATED: Checkbox for Remember Me -->
+                    <label class="checkbox-container remember">
+                        <input type="checkbox" id="remember-me-check"> 
+                        <span>Remember me</span>
+                    </label>
+                    
+                    <span class="forget">Forgot password?</span>
+                    <span class="clearfix"></span>
+                    <button type="submit">Log In</button>
+                </form>
+                
+                <span class="loginwith">Or access as</span>
+                <button class="guest-btn" id="guest-login-btn">
+                    <i data-feather="user"></i> Continue as Guest
+                </button>
+            </div>
+        </div>
+
+        <!-- Animation Panels -->
+        <div class="page front">
+            <div class="content">
+                <i data-feather="user-plus" style="width:96px; height:96px; stroke: white;"></i>
+                <h1>Hello, friend!</h1>
+                <p>Enter your personal details and start journey with us</p>
+                <button id="register-flip-btn">Register <i data-feather="arrow-right-circle"></i></button>
+            </div>
+        </div>
+        <div class="page back">
+            <div class="content">
+                <i data-feather="log-in" style="width:96px; height:96px; stroke: white;"></i>
+                <h1>Welcome Back!</h1>
+                <p>To keep connected with us please login with your personal info</p>
+                <button id="login-flip-btn"><i data-feather="arrow-left-circle"></i> Log In</button>
+            </div>
+        </div>
+
+        <!-- Registration Side -->
+        <div class="register">
+            <div class="content">
+                <h1>Sign Up</h1>
+                <p class="small-text">Note: Accounts require Admin approval.</p>
+                <form id="register-form">
+                    <input type="text" id="reg-name" placeholder="Full Name" required>
+                    <input type="email" id="reg-email" placeholder="Email" required>
+                    <input type="password" id="reg-password" placeholder="Password" required>
+                    
+                    <!-- UPDATED: Terms Checkbox -->
+                    <label class="checkbox-container remember">
+                        <input type="checkbox" id="reg-terms-check"> 
+                        <span>I accept terms & conditions</span>
+                    </label>
+                    
+                    <span class="clearfix"></span>
+                    <button type="submit">Register</button>
+                </form>
+            </div>      
+        </div>
+    </div>
+
+    <!-- DASHBOARD CONTAINER -->
+    <div id="dashboard-app" class="hidden">
+        <nav class="top-nav">
+            <div class="nav-brand">Project Scheduler</div>
+            
+            <!-- ADMIN TABS (Only visible to Admin) -->
+            <div id="admin-tabs" class="nav-tabs hidden">
+                <button class="tab-btn active" onclick="switchAdminTab('schedule')">Project Schedule</button>
+                <button class="tab-btn" onclick="switchAdminTab('users')">
+                    User Approvals <span id="pending-count" class="badge">0</span>
+                </button>
+            </div>
+
+            <div class="nav-user">
+                <span id="user-display-name">User</span>
+                <button id="logout-btn">Logout</button>
+            </div>
+        </nav>
+
+        <div class="main-content">
+            <!-- 1. SCHEDULE VIEW -->
+            <div id="schedule-view" class="view-section">
+                <div class="toolbar" id="admin-toolbar">
+                    <h2>Project Schedule</h2>
+                    <div>
+                        <button id="add-row-btn" class="action-btn add">+ Add Project</button>
+                        <button id="save-data-btn" class="action-btn save">Save Changes</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="project-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Project Name</th>
+                                <th>Client</th>
+                                <th>Set-up</th>
+                                <th>Show</th>
+                                <th>Location</th>
+                                <th>Crew</th>
+                                <th>Remarks</th>
+                                <th class="actions-col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 2. ADMIN USER APPROVAL VIEW -->
+            <div id="users-view" class="view-section hidden">
+                <h2 style="margin-bottom: 20px;">User Management</h2>
+                <div class="table-container">
+                    <table id="users-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Date Registered</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. GUEST VIEW -->
+            <div id="guest-view" class="view-section hidden">
+                <div class="guest-card">
+                    <h1>Welcome, Guest</h1>
+                    <p>Guest content will be updated soon.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>feather.replace();</script>
+</body>
+</html>
