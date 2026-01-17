@@ -9,11 +9,11 @@ body { height: 100%; background: #e9ebee; color: #1d2129; display: flex; align-i
 .hidden { display: none !important; }
 .small-text { font-size: 1.2rem; margin-bottom: 15px; color: #666; }
 
-/* --- LOGIN / REGISTER UI --- */
+/* --- LOGIN UI --- */
 h1 { font-weight: 700; font-size: 3.5em; text-align: center; margin-bottom: 0.5em; }
 form input[type="email"], form input[type="password"], form input[type="text"] { background: #eee; border: none; padding: 12px 15px; margin: 8px 0; width: 100%; font-size: 1.4em; border-radius: 5px; }
 
-/* Checkbox specific alignment */
+/* Checkboxes */
 .checkbox-container { display: flex; align-items: center; margin: 15px 0; font-size: 1.4em; color: #333; font-weight: 100; cursor: pointer; float: left; }
 .checkbox-container input { width: auto; margin-right: 8px; cursor: pointer; transform: scale(1.2); }
 
@@ -40,7 +40,6 @@ button.guest-btn:hover { background: #eee; }
 .back { background: linear-gradient(135deg, #FC4F4F 0%, #FFCF00 100%); z-index: 2; }
 .back .content { transform: rotateY(180deg); }
 
-/* Animation Keyframes */
 .active .front { animation: rot-front 0.6s ease-in-out normal forwards; }
 .active .back { animation: rot-back 0.6s ease-in-out normal forwards; }
 .close .front { animation: close-rot-front 0.6s ease-in-out normal forwards; }
@@ -63,7 +62,6 @@ button.guest-btn:hover { background: #eee; }
 .nav-brand { font-size: 1.8em; font-weight: 700; color: #FC4F4F; }
 .nav-user { display: flex; align-items: center; gap: 20px; font-size: 1.4em; }
 
-/* Admin Tabs */
 .nav-tabs { display: flex; gap: 10px; }
 .tab-btn { background: transparent; border: none; color: #555; padding: 10px 20px; font-size: 1.4em; border-radius: 20px; font-weight: 600; cursor: pointer; transition: 0.3s; }
 .tab-btn:hover { background: #f0f0f0; }
@@ -72,7 +70,6 @@ button.guest-btn:hover { background: #eee; }
 
 .main-content { flex: 1; padding: 30px; overflow-y: auto; }
 
-/* Table Styles */
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .table-container { background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; min-width: 900px; }
@@ -81,7 +78,6 @@ th { background: #f8f9fa; font-weight: 700; color: #444; position: sticky; top: 
 td input { background: transparent; border: 1px solid transparent; width: 100%; padding: 5px; font-family: inherit; font-size: inherit; }
 td input:focus { border: 1px solid #FC4F4F; background: #fff; outline: none; }
 
-/* Buttons & Status */
 .action-btn { border-radius: 5px; margin: 0; font-size: 1em; padding: 0.6em 1.2em; display: inline-block; color: white; border: none; }
 .action-btn.add { background: #28a745; }
 .action-btn.save { background: #007bff; }
@@ -92,12 +88,10 @@ td input:focus { border: 1px solid #FC4F4F; background: #fff; outline: none; }
 .status-pending { color: #856404; background-color: #fff3cd; padding: 4px 8px; border-radius: 4px; font-size: 1.2rem; font-weight: bold; }
 .status-approved { color: #155724; background-color: #d4edda; padding: 4px 8px; border-radius: 4px; font-size: 1.2rem; font-weight: bold; }
 
-/* Guest Page */
 .guest-card { background: #fff; padding: 50px; border-radius: 10px; text-align: center; max-width: 600px; margin: 50px auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
 .guest-card h1 { color: #FC4F4F; margin-bottom: 20px; }
 .guest-card p { font-size: 1.6em; color: #666; }
 
-/* Notification */
 #notification-area { position: fixed; top: 20px; right: 20px; z-index: 100; }
 .toast { background: #333; color: #fff; padding: 15px 25px; border-radius: 5px; margin-bottom: 10px; font-size: 1.4rem; animation: slideIn 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
 @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
